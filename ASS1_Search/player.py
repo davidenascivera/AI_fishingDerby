@@ -32,6 +32,7 @@ class PlayerControllerHuman(PlayerController):
 
 class PlayerControllerMinimax(PlayerController):
     def __init__(self):
+        #in questa parte abbiamo l'inizializzazione prima della derivata poi del parente
         super(PlayerControllerMinimax, self).__init__()
         self.max_depth = 2  # Adjust depth based on performance
 
@@ -39,10 +40,15 @@ class PlayerControllerMinimax(PlayerController):
         """
         Main loop for the minimax next move search.
         """
-        # Receive the initial state
-        first_msg = self.receiver()
 
         while True:
+            
+            '''
+            1. Riceve il messaggio dal gioco
+            2. Crea il nodo radice dell'albero di gioco
+            3. Esegue la ricerca Minimax per trovare la mossa migliore
+            4. Esegue la mossa migliore
+            '''
             msg = self.receiver()
 
             # Create the root node of the game tree
@@ -54,23 +60,27 @@ class PlayerControllerMinimax(PlayerController):
             # Execute the best move
             self.sender({"action": best_move, "search_time": None})
 
-    def search_best_move(self, root: Node) -> str:
+    def search_best_move(self, root: Node) -> str: 
+        #la freccia serve solo per indicare il tipo di ritorno (non obbligatoria)
         """
-        Initiate Minimax search with Alpha-Beta pruning to find the best move.
-
-        :param root: The root node of the current game state.
-        :return: Best move as a string ("stay", "left", "right", "up", "down")
+        Questa funzione chiama il metodo minimax per trovare la mossa migliore.
+        :param root: Il nodo radice dello stato di gioco corrente.
+        :return: Ritorna la migliore mossa sotto stringa ("stay", "left", "right", "up", "down")
         """
         best_val = -float('inf')
-        best_move = "stay"
+        best_move = "stay" # Inizializzazione della mossa migliore
 
         # Expand children
         children = root.compute_and_get_children()
+        #Ogni volta che viene creato un figlio ha l'attributo move che indica la mossa che ha portato a quel figlio
 
         logging.info("Starting Minimax search...")
 
         for child in children:
-            move = ACTION_TO_STR.get(child.move, "stay")
+            # ACTION_TO_STR is used to convert the move integer to a string representation
+            
+            # Move è l'azione che ha portato alla creazione del nodo figlio
+            move = ACTION_TO_STR.get(child.move, "stay")  # Default to "stay" if move is not found
             move_val = self.minimax(child, self.max_depth - 1, False, -float('inf'), float('inf'))
             logging.debug(f"Move: {move}, Value: {move_val}")
 
@@ -82,6 +92,7 @@ class PlayerControllerMinimax(PlayerController):
         return best_move
 
     def minimax(self, node: Node, depth: int, is_maximizing: bool, alpha: float, beta: float) -> float:
+
         """
         Minimax algorithm with Alpha-Beta pruning.
 
