@@ -31,8 +31,7 @@ class PlayerControllerHuman(PlayerController):
                 return
 
 class PlayerControllerMinimax(PlayerController):
-    def __init__(self):
-        #in questa parte abbiamo l'inizializzazione prima della derivata poi del parente
+    def __init__(self): #in questa parte abbiamo l'inizializzazione prima della derivata poi del parente
         super(PlayerControllerMinimax, self).__init__()
         self.max_depth = 2  # Adjust depth based on performance
 
@@ -40,6 +39,9 @@ class PlayerControllerMinimax(PlayerController):
         """
         Main loop for the minimax next move search.
         """
+
+        # Ricezione del messaggio iniziale. NB è necessario 
+        first_msg = self.receiver()
 
         while True:
             
@@ -49,8 +51,21 @@ class PlayerControllerMinimax(PlayerController):
             3. Esegue la ricerca Minimax per trovare la mossa migliore
             4. Esegue la mossa migliore
             '''
+    
+            
             msg = self.receiver()
+            # The received message should look like:
+            # {
+            #     "hooks_positions": {0: (x, y), 1: (x, y)},
+            #     "fishes_positions": {fish_id: (x, y), ...},
+            #     "observations": {fish_id: [observation, ...], ...},
+            #     "fish_scores": {fish_id: score, ...},
+            #     "player_scores": {0: score, 1: score},
+            #     "caught_fish": {0: fish_id or None, 1: fish_id or None},
+            #     "game_over": False
+            # }
 
+            
             # Create the root node of the game tree
             root = Node(message=msg, player=0)  # Assuming AI is player 0
 
@@ -61,26 +76,23 @@ class PlayerControllerMinimax(PlayerController):
             self.sender({"action": best_move, "search_time": None})
 
     def search_best_move(self, root: Node) -> str: 
-        #la freccia serve solo per indicare il tipo di ritorno (non obbligatoria)
+        #NB non è necessario mettere la freccia ma serve per essere chiari
         """
-        Questa funzione chiama il metodo minimax per trovare la mossa migliore.
-        :param root: Il nodo radice dello stato di gioco corrente.
-        :return: Ritorna la migliore mossa sotto stringa ("stay", "left", "right", "up", "down")
+        Cercare la mossa migliore utilizzando l'algoritmo Minimax con potatura Alpha-Beta.
+
+        :param root: il nodo radice dell'albero di gioco.
+        :return: La migliore mossa trovata ("stay", "left", "right", "up", "down")
         """
         best_val = -float('inf')
-        best_move = "stay" # Inizializzazione della mossa migliore
+        best_move = "stay"
 
         # Expand children
         children = root.compute_and_get_children()
-        #Ogni volta che viene creato un figlio ha l'attributo move che indica la mossa che ha portato a quel figlio
 
         logging.info("Starting Minimax search...")
 
         for child in children:
-            # ACTION_TO_STR is used to convert the move integer to a string representation
-            
-            # Move è l'azione che ha portato alla creazione del nodo figlio
-            move = ACTION_TO_STR.get(child.move, "stay")  # Default to "stay" if move is not found
+            move = ACTION_TO_STR.get(child.move, "stay")
             move_val = self.minimax(child, self.max_depth - 1, False, -float('inf'), float('inf'))
             logging.debug(f"Move: {move}, Value: {move_val}")
 
@@ -92,7 +104,6 @@ class PlayerControllerMinimax(PlayerController):
         return best_move
 
     def minimax(self, node: Node, depth: int, is_maximizing: bool, alpha: float, beta: float) -> float:
-
         """
         Minimax algorithm with Alpha-Beta pruning.
 
@@ -132,14 +143,6 @@ class PlayerControllerMinimax(PlayerController):
                     break
             return min_eval
 
-    def calculate_distance(self, pos1, pos2):
-        """
-        Calculate Manhattan distance with wrapping on x-axis
-        The game board wraps horizontally (20 cells wide)
-        """
-        dx = min((pos1[0] - pos2[0]) % 20, (pos2[0] - pos1[0]) % 20)  # Handle wrapped x-axis
-        dy = abs(pos1[1] - pos2[1])  # Regular y-axis distance
-        return dx + dy
 
     def heuristic(self, state: State) -> float:
         """
@@ -168,3 +171,12 @@ class PlayerControllerMinimax(PlayerController):
             caught_bonus = -10
 
         return score_diff + (position_value * 2) + caught_bonus
+
+    def calculate_distance(self, pos1, pos2):
+        """
+        Calculate Manhattan distance with wrapping on x-axis
+        The game board wraps horizontally (20 cells wide)
+        """
+        dx = min((pos1[0] - pos2[0]) % 20, (pos2[0] - pos1[0]) % 20)  # Handle wrapped x-axis
+        dy = abs(pos1[1] - pos2[1])  # Regular y-axis distance
+        return dx + dy

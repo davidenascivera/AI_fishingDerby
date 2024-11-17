@@ -20,7 +20,7 @@ class FishingDerbyMinimaxApp(FishingDerbyApp, Fishes, PrintScore2Players, GamesW
         self.current_player = 0  # Player that starts moving
         self.time_sent = None  # Time of last sent state to player loop
         self.time_received = None  # Time of last receive state from player loop
-        self.n_timeouts = 0
+        self.n_timeouts = 0 # Number of timeouts
         self.load_observations()
 
     def update_clock(self, dl):
@@ -140,8 +140,7 @@ class FishingDerbyMinimaxApp(FishingDerbyApp, Fishes, PrintScore2Players, GamesW
             msg["observations"][n] = fish.observations_sequence[st:]
             msg["fish_scores"][n] = fish.score
 
-        caught_fish_names = {0: None,
-                             1: None}
+        caught_fish_names = {0: None, 1: None}
 
         for p in range(len(self.players)):
             if self.players[p].boat.has_fish is not None:

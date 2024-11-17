@@ -37,6 +37,8 @@ ACTION_TO_STR = {
     3: "left",
     4: "right"
 }
+# ACTION_TO_STR is a dictionary that maps action integers to their corresponding string representations.
+# This is useful for converting the action codes used in the game logic to human-readable strings.
 
 TYPE_TO_SCORE = {
     0: 1,
